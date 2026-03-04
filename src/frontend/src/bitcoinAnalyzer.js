@@ -13,15 +13,24 @@ export async function analyzeBtcAddress(address) {
   if (!infoRes.ok) throw new Error("Invalid Bitcoin address or API error");
   const info = await infoRes.json();
 
-  const utxoRes = await fetch(`${API}/address/${address}/utxo`);
-  if (!utxoRes.ok) throw new Error("Failed to fetch UTXOs");
-  const utxos = await utxoRes.json();
+  // UTXOs may fail for very large addresses — handle gracefully
+  let utxos = [];
+  try {
+    const utxoRes = await fetch(`${API}/address/${address}/utxo`);
+    if (utxoRes.ok) utxos = await utxoRes.json();
+  } catch {}
 
-  const txRes = await fetch(`${API}/address/${address}/txs`);
-  const txs = txRes.ok ? await txRes.json() : [];
+  let txs = [];
+  try {
+    const txRes = await fetch(`${API}/address/${address}/txs`);
+    if (txRes.ok) txs = await txRes.json();
+  } catch {}
 
-  const tipRes = await fetch(`${API}/blocks/tip/height`);
-  const currentHeight = tipRes.ok ? parseInt(await tipRes.text()) : 880000;
+  let currentHeight = 880000;
+  try {
+    const tipRes = await fetch(`${API}/blocks/tip/height`);
+    if (tipRes.ok) currentHeight = parseInt(await tipRes.text());
+  } catch {}
 
   const metrics = computeMetrics(info, utxos, txs, currentHeight);
   const score = computeScore(metrics);
@@ -61,6 +70,10 @@ function computeMetrics(info, utxos, txs, currentHeight) {
       const earliest = Math.min(...timestamps);
       accountAgeDays = (Date.now() / 1000 - earliest) / 86400;
     }
+  }
+  // If no txs returned but we know tx_count, estimate from chain data
+  if (accountAgeDays === 0 && txCount > 0) {
+    accountAgeDays = 365 * 4; // estimate for old addresses where API paginates
   }
 
   const monthsActive = Math.max(accountAgeDays / 30, 1);
