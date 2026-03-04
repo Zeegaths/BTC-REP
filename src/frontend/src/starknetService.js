@@ -1,42 +1,29 @@
-import { Contract, RpcProvider, CallData } from "starknet";
-import { CONTRACTS, ORACLE_ABI, SBT_ABI, TIER_MAP } from "./contracts";
+import { CONTRACTS } from "./contracts";
 
-const SEPOLIA_RPC = "https://alpha-sepolia.starknet.io";
-export const provider = new RpcProvider({ nodeUrl: SEPOLIA_RPC });
+// Skip RPC read calls for now — they cause CORS issues
+// The wallet handles its own RPC connection for transactions
 
-export async function hasSBT(starknetAddress) {
-  try {
-    const sbt = new Contract(SBT_ABI, CONTRACTS.SBT, provider);
-    return await sbt.has_sbt(starknetAddress);
-  } catch { return false; }
+export async function hasSBT() {
+  return false; // Will check on-chain later
 }
 
 export async function getTotalSupply() {
-  try {
-    const sbt = new Contract(SBT_ABI, CONTRACTS.SBT, provider);
-    return Number(await sbt.total_supply());
-  } catch { return 0; }
+  return 0; // Will read on-chain later
 }
 
 export async function mintCreditSBT(wallet, toAddress, score, tier) {
   const account = wallet.account;
 
-  const calldata = CallData.compile({
-    to: toAddress,
-    score: score,
-    tier: tier,
-  });
-
   const tx = await account.execute([
     {
       contractAddress: CONTRACTS.SBT,
       entrypoint: "mint_credit_sbt",
-      calldata: calldata,
+      calldata: [toAddress, String(score), String(tier)],
     }
   ]);
 
-  const receipt = await provider.waitForTransaction(tx.transaction_hash);
-  return { txHash: tx.transaction_hash, receipt };
+  await account.waitForTransaction(tx.transaction_hash);
+  return { txHash: tx.transaction_hash };
 }
 
 export function getExplorerTxUrl(txHash) {
