@@ -27,7 +27,7 @@ const isValidBtcAddress = (addr) => {
   if (!addr) return false;
   const trimmed = addr.trim();
   // P2PKH (1...), P2SH (3...), Bech32 (bc1...)
-  return /^(1[a-km-zA-HJ-NP-Z1-9]{25,34}|3[a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{6,87})$/.test(trimmed);
+  return /^(1[a-km-zA-HJ-NP-Z1-9]{25,34}|3[a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{6,87}|tb1[ac-hj-np-zAC-HJ-NP-Z02-9]{6,87}|[mn2][a-km-zA-HJ-NP-Z1-9]{25,34})$/.test(trimmed);
 };
 
 function mockAnalyze(profile) {
@@ -269,9 +269,9 @@ export default function App() {
       <nav className="border-b border-gray-800 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center font-bold text-sm">₿</div>
+            <img src="/replogo.png" alt="BTCRep" className="w-8 h-8 rounded-lg" />
             <span className="text-xl font-bold">BTCRep</span>
-            <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">RE{"{DEFINE}"} Hackathon</span>
+            {/* <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">RE{"{DEFINE}"} Hackathon</span> */}
           </div>
           <div className="flex gap-2">
             {totalSBTs > 0 && <span className="text-xs text-gray-600 self-center mr-2">{totalSBTs} SBTs</span>}
@@ -485,7 +485,7 @@ export default function App() {
         {/* ══════════════════════════ RESULTS ══════════════════════════════ */}
         {step === "results" && result && (
           <div>
-            <button onClick={resetFlow} className="text-gray-400 hover:text-white text-sm mb-4 flex items-center gap-1 transition">← Analyze Another</button>
+            <div className="flex gap-3 mb-6"><button onClick={resetFlow} className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">← Back</button></div>
 
             {/* Read-only banner when viewing a pasted address */}
             {isReadOnly && <ReadOnlyBanner address={pasteAddress} />}
@@ -525,7 +525,7 @@ export default function App() {
                     <span className="text-sm text-green-400">✓ SBT Already Minted</span>
                   </div>
                 ) : !snWallet.connected ? (
-                  <button onClick={connectStarknetWallet} className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition">
+                  <button onClick={async () => { const w = window.starknet_argentX || window.starknet_braavos || window.starknet; if (!w) { setError("Install ArgentX or Braavos"); return; } try { await w.enable(); const a = w.selectedAddress || w.account?.address; if (a) { setSnWallet({ connected: true, address: a }); setSnWalletObj(w); } } catch(e) { setError("Connection failed: " + e.message); } }} className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition">
                     Connect Starknet to Mint SBT
                   </button>
                 ) : (
@@ -607,11 +607,11 @@ export default function App() {
 
       <footer className="border-t border-gray-800 px-6 py-6 mt-20">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between text-sm text-gray-500 gap-2">
-          <span>BTCRep — RE{"{DEFINE}"} Hackathon | Starknet</span>
+          <span>BTCRep </span>
           <div className="flex gap-4">
             <span>Built with Cairo + STARK proofs</span>
             <span>•</span>
-            <span>₿ Bitcoin + 🔒 Privacy Track</span>
+            <span>₿ Bitcoin + 🔒 Privacy</span>
           </div>
         </div>
       </footer>
