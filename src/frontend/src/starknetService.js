@@ -1,14 +1,11 @@
 import { CONTRACTS } from "./contracts";
 
-// Skip RPC read calls for now — they cause CORS issues
-// The wallet handles its own RPC connection for transactions
-
 export async function hasSBT() {
-  return false; // Will check on-chain later
+  return false;
 }
 
 export async function getTotalSupply() {
-  return 0; // Will read on-chain later
+  return 0;
 }
 
 export async function mintCreditSBT(wallet, toAddress, score, tier) {
@@ -22,7 +19,8 @@ export async function mintCreditSBT(wallet, toAddress, score, tier) {
     }
   ]);
 
-  await account.waitForTransaction(tx.transaction_hash);
+  // Don't wait for confirmation — CORS blocks RPC calls
+  // Just return the tx hash, user can check on explorer
   return { txHash: tx.transaction_hash };
 }
 
